@@ -69,5 +69,24 @@ services:
       - .env
     command: ["pytest", "src/tests/deepevals", "--capture", "no"]
 
+  ai-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: base
+    env_file:
+      - .env
+    command: ["uv", "run", "pytest", "-o", "addopts=", "-m", "ai", "--capture", "no"]
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    volumes:
+      - ./src:/code/src
+      - ./pyproject.toml:/code/pyproject.toml:ro
+    profiles:
+      - ai-tests
+
 volumes:
   dbdata:

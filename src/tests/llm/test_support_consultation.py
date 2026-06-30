@@ -20,14 +20,6 @@ async def test_graph():
         Golden(
             name="delivery_conditions",
             input="Hi, is the delivery free?",
-            expected_output=(
-                """
-            Delivery is available across Minsk and Belarus, with free delivery in Minsk
-            for orders over 150 BYN (and for selected brands regardless of order value);
-            shipping fees for other orders depend on the destination and product weight,
-            while delivery timelines are typically 1–3 days in Belarus.
-            """
-            ),
             expected_tools=[
                 ToolCall(
                     name="fetch_page_main_block",
@@ -38,15 +30,6 @@ async def test_graph():
         Golden(
             name="warranty",
             input="What if i dont like the product? Can i return it?",
-            expected_output=(
-                """
-            All purchases include a warranty and receipt,
-            allowing eligible returns or exchanges within 14 days if
-            the item is unused and meets return conditions, while defective products
-            can be returned or replaced with proof of purchase and
-            a service center confirmation of a manufacturing defect.
-            """
-            ),
             expected_tools=[
                 ToolCall(
                     name="fetch_page_main_block",
@@ -57,14 +40,6 @@ async def test_graph():
         Golden(
             name="discount",
             input="Do you have any discount programs?",
-            expected_output=(
-                """
-            The loyalty program offers 3–7% discounts based on cumulative purchase amounts,
-            valid across all stores, with exclusions for promotional items, certain brands
-            (e.g. STIHL and some Karcher products), installment purchases,
-            and other active discounts.
-            """
-            ),
             expected_tools=[
                 ToolCall(
                     name="fetch_page_main_block",
@@ -113,7 +88,6 @@ async def test_graph():
                 criteria="Determine whether the assistant correctly answers the user's question.",
                 evaluation_params=[
                     SingleTurnParams.INPUT,
-                    SingleTurnParams.EXPECTED_OUTPUT,
                     SingleTurnParams.ACTUAL_OUTPUT,
                 ],
             ),

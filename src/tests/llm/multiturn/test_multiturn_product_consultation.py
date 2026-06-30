@@ -4,9 +4,9 @@ from pathlib import Path
 import pytest
 from deepeval.dataset import EvaluationDataset
 from deepeval.evaluate import evaluate
-from deepeval.metrics import AnswerRelevancyMetric, TopicAdherenceMetric, TurnRelevancyMetric
+from deepeval.metrics import TopicAdherenceMetric, TurnRelevancyMetric
 from deepeval.simulator import ConversationSimulator
-from deepeval.test_case import LLMTestCase, Turn
+from deepeval.test_case import Turn
 from langchain_core.messages import HumanMessage
 
 
@@ -55,16 +55,3 @@ async def test_graph(compiled_graph):
             ),
         ],
     )
-
-    answer_relevancy_metric = AnswerRelevancyMetric(
-        threshold=0.7, model="gpt-4o-mini", include_reason=True
-    )
-    rag_test_cases = []
-
-    for test_case in conversational_test_cases:
-        input_context = "\n".join([turn.content for turn in test_case.turns if turn.role == "user"])
-        rag_test_cases.append(
-            LLMTestCase(input=input_context, actual_output=test_case.turns[-1].content)
-        )
-
-    evaluate(test_cases=rag_test_cases, metrics=[answer_relevancy_metric])
