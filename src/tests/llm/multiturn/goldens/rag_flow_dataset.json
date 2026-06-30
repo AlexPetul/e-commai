@@ -1,0 +1,6 @@
+[
+  {
+    "scenario": "Andy wants to buy a new lawnmower but doesn't know how to choose.",
+    "expected_output": "The system has provided to Andy a few products to concider, or answer politely that there is no matching products in the catalog."
+  },
+]

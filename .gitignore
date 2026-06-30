@@ -1,0 +1,48 @@
+.DS_Store
+
+# Backup files
+*.bak
+
+.idea
+
+# Unit test / coverage reports / linters cache
+htmlcov/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+coverage.xml
+*.cover
+.testmondata
+
+.ssh_keys
+
+# pyenv
+.python-version
+
+# celery
+celerybeat-schedule.*
+
+# Environments
+.env
+.venv
+env/
+venv/
+
+__pycache__/
+
+.testmondata-shm
+.testmondata-wal
+
+# mypy
+.mypy_cache/
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history
