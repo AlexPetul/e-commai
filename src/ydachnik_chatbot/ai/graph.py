@@ -3,7 +3,6 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
 from ydachnik_chatbot.ai.nodes import (
-    product_category_classifier_node,
     product_consultant_node,
     product_tools,
     support_consultant_node,
@@ -21,11 +20,6 @@ def build_graph(checkpointer: BaseCheckpointSaver):
     builder = StateGraph(AgentState)
 
     builder.add_node("intent_router", intent_router, metadata={"disable_streaming": True})
-    builder.add_node(
-        "product_category_classifier",
-        product_category_classifier_node,
-        metadata={"disable_streaming": True},
-    )
     builder.add_node("product_consultant", product_consultant_node)
     builder.add_node(
         "product_tools", ToolNode(product_tools, handle_tool_errors=_tool_error_handler)
@@ -40,12 +34,11 @@ def build_graph(checkpointer: BaseCheckpointSaver):
         "intent_router",
         route_conversation,
         {
-            "product_consultant": "product_category_classifier",
+            "product_consultant": "product_consultant",
             "support_consultant": "support_consultant",
             END: END,
         },
     )
-    builder.add_edge("product_category_classifier", "product_consultant")
     builder.add_conditional_edges(
         "product_consultant", tools_condition, {"tools": "product_tools", END: END}
     )

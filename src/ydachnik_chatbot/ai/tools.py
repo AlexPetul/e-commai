@@ -14,9 +14,7 @@ from langgraph.types import Command
 from ydachnik_chatbot.ai.category_candidates import get_nearest_category_candidates
 from ydachnik_chatbot.ai.filters import score_document
 from ydachnik_chatbot.ai.retrievers import retrieve
-from ydachnik_chatbot.infrastructure.db.product_category_repo import (
-    fetch_category_attributes,
-)
+from ydachnik_chatbot.infrastructure.db.product_category_repo import product_category_repo
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +29,7 @@ async def load_category_attributes(
     Call this once when the product category is known to better understand
     possible attributes of the product to search for.
     """
-    attributes = await fetch_category_attributes(category)
+    attributes = await product_category_repo.fetch_category_attributes(category)
     attributes.append(
         {
             "name": "price",
@@ -73,6 +71,60 @@ async def save_product_attributes(
                     content=f"Product attributes extracted: {attributes}", tool_call_id=tool_call_id
                 )
             ],
+        }
+    )
+
+
+@tool
+async def set_product_category(
+    runtime: ToolRuntime,
+    category: str | None,
+    tool_call_id: Annotated[str, InjectedToolCallId],
+) -> Command:
+    """Set the current product category in state.
+
+    Call this after deciding which category best matches the user's request.
+    """
+    current_category = runtime.state.get("product_category")
+    content = f"Product category set to: {category}" if category else "Product category cleared."
+    update: dict[str, Any] = {"product_category": category}
+
+    if category != current_category:
+        update["product_attribute_schema"] = None
+        # update["product_attributes"] = None
+
+    return Command(
+        update={**update, "messages": [ToolMessage(content=content, tool_call_id=tool_call_id)]}
+    )
+
+
+@tool
+async def get_category_candidates_for_classification(runtime: ToolRuntime) -> list[str]:
+    """Get list of categories that match user's query the best.
+
+    Call this only when the product category is unknown or unclear.
+    """
+    message = [
+        m.content.strip()
+        for m in runtime.state["messages"]
+        if isinstance(m, HumanMessage) and isinstance(m.content, str) and m.content.strip()
+    ][-1]
+
+    return await get_nearest_category_candidates(message)
+
+
+@tool
+async def get_price_range(category: str, tool_call_id: Annotated[str, InjectedToolCallId]):
+    """Get price range for product category and product preferences."""
+    min_p, max_p = await product_category_repo.get_price_range(category=category)
+
+    return Command(
+        update={
+            "messages": [
+                ToolMessage(
+                    content=f"Price range is {min_p} to {max_p} BYN", tool_call_id=tool_call_id
+                )
+            ]
         }
     )
 
@@ -128,25 +180,8 @@ async def search_products(
 
 
 @tool
-async def get_category_candidates_for_classification(runtime: ToolRuntime) -> list[str]:
-    """Get list of categories that match user's query the best.
-
-    Use this tool to classify the product based on user's query.
-    """
-    messages = [
-        m.content.strip()
-        for m in runtime.state["messages"]
-        if isinstance(m, HumanMessage) and isinstance(m.content, str) and m.content.strip()
-    ]
-
-    candidate_categories = await get_nearest_category_candidates("\n".join(messages))
-
-    return candidate_categories
-
-
-@tool
 @cachier(backend="memory", stale_after=timedelta(hours=1))
-async def fetch_page_main_block(url: str) -> str:
+async def fetch_page(url: str) -> str:
     """Fetch the <main> block of a website page and return readable text."""
     parsed = urlparse(url)
     if parsed.netloc not in {"ydachnik.by", "www.ydachnik.by"}:

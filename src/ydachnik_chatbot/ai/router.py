@@ -5,7 +5,7 @@ from langgraph.constants import END
 from pydantic import BaseModel, Field
 
 from ydachnik_chatbot.ai.llm import intent_router_llm
-from ydachnik_chatbot.ai.prompts_store.langsmith_store import langsmith_prompt_store
+from ydachnik_chatbot.ai.prompts_store.langsmith_store import LangsmithPromptStore
 from ydachnik_chatbot.ai.state import AgentState
 
 
@@ -27,7 +27,7 @@ def _router_messages(state: AgentState) -> list:
 
 async def intent_router(state: AgentState) -> dict[str, Any]:
     router_llm = intent_router_llm.with_structured_output(RouteDecision, method="function_calling")
-    system_prompt = await langsmith_prompt_store.retrieve("intent_classification")
+    system_prompt = await LangsmithPromptStore.retrieve("intent_classification")
 
     decision: RouteDecision = await router_llm.ainvoke(
         [SystemMessage(content=system_prompt), *_router_messages(state)]

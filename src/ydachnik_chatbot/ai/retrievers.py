@@ -4,46 +4,31 @@ from langchain_classic.retrievers import EnsembleRetriever
 from langchain_community.retrievers import BM25Retriever
 from langchain_core.documents import Document
 
-from ydachnik_chatbot.catalog.csv_reader import read_products_csv
 from ydachnik_chatbot.catalog.documents_loader import convert_products_to_bm25_documents
+from ydachnik_chatbot.infrastructure.db.product_category_repo import product_category_repo
 from ydachnik_chatbot.infrastructure.db.vectorstore import get_vectorstore
-from ydachnik_chatbot.settings import settings
 
 logger = logging.getLogger(__name__)
 
 VECTOR_SEARCH_TOP_K = 30
 BM25_SEARCH_TOP_K = 30
 
-_bm25_retriever: BM25Retriever | None = None
 
+async def get_bm25_retriever(category: str) -> BM25Retriever | None:
+    items = await product_category_repo.filter_products_by_category(category)
+    documents = convert_products_to_bm25_documents(items)
 
-def _load_bm25_documents() -> list[Document]:
-    try:
-        with open(settings.products_csv_path, encoding="utf-8-sig") as f:
-            items = read_products_csv(f.read())
-    except FileNotFoundError:
-        logger.warning("Products CSV not found at %s, BM25 disabled.", settings.products_csv_path)
-        return []
-    return convert_products_to_bm25_documents(items)
-
-
-async def get_bm25_retriever() -> BM25Retriever | None:
-    global _bm25_retriever
-    if _bm25_retriever is not None:
-        return _bm25_retriever
-
-    documents = _load_bm25_documents()
     if not documents:
         logger.warning("No product documents found for BM25 retriever.")
         return None
 
-    _bm25_retriever = BM25Retriever.from_documents(
+    bm25_retriever = BM25Retriever.from_documents(
         documents,
         k=BM25_SEARCH_TOP_K,
         bm25_params={"k1": 1.5, "b": 0.75},
     )
     logger.info("BM25 retriever initialized with %d documents.", len(documents))
-    return _bm25_retriever
+    return bm25_retriever
 
 
 async def retrieve(
@@ -61,7 +46,7 @@ async def retrieve(
         },
     )
 
-    bm25_retriever = await get_bm25_retriever()
+    bm25_retriever = await get_bm25_retriever(category)
     if bm25_retriever is None:
         return await vector_retriever.ainvoke(query)
 
@@ -71,16 +56,7 @@ async def retrieve(
         id_key="url",
     )
     docs = await ensemble.ainvoke(query)
-
-    if category:
-        cat_lower = category.lower()
-        docs = [d for d in docs if d.metadata.get("category", "").lower() == cat_lower]
-
     return docs
-
-
-async def init_bm25_retriever() -> None:
-    await get_bm25_retriever()
 
 
 async def get_retriever(k: int = 4):

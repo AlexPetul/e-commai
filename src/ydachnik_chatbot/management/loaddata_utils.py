@@ -17,7 +17,7 @@ def build_category_attributes(items: list[ProductItem]) -> dict:
     result = defaultdict(dict)
 
     for item in items:
-        if not item.category or not item.attributes or item.attributes == "[]":
+        if not item.category:
             continue
 
         try:

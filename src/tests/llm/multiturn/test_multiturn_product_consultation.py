@@ -8,11 +8,17 @@ from deepeval.metrics import TopicAdherenceMetric, TurnRelevancyMetric
 from deepeval.simulator import ConversationSimulator
 from deepeval.test_case import Turn
 from langchain_core.messages import HumanMessage
+from concurrent.futures import ThreadPoolExecutor
+
+_executor = ThreadPoolExecutor(max_workers=1)
+
+def run_async(coro):
+    future = _executor.submit(asyncio.run, coro)
+    return future.result()
 
 
 @pytest.mark.ai
-@pytest.mark.asyncio
-async def test_graph(compiled_graph):
+def test_graph(compiled_graph):
     def model_callback(input: str, thread_id: str) -> Turn:
         async def inner():
             result = await compiled_graph.ainvoke(
@@ -21,7 +27,7 @@ async def test_graph(compiled_graph):
             )
             return Turn(role="assistant", content=result["messages"][-1].content)
 
-        return asyncio.run(inner())
+        return run_async(inner())
 
     dataset = EvaluationDataset()
     dataset.add_goldens_from_json_file(
@@ -37,9 +43,9 @@ async def test_graph(compiled_graph):
     evaluate(
         test_cases=conversational_test_cases,
         metrics=[
-            TurnRelevancyMetric(model="gpt-5.4-mini"),
+            TurnRelevancyMetric(model="gpt-4o-mini"),
             TopicAdherenceMetric(
-                model="gpt-5.4-mini",
+                model="gpt-4o-mini",
                 relevant_topics=[
                     "Garden equipment and outdoor maintenance",
                     "Power tools and machinery",

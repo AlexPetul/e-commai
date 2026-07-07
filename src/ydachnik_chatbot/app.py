@@ -9,7 +9,6 @@ from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from ydachnik_chatbot import runtime
 from ydachnik_chatbot.ai import build_graph
 from ydachnik_chatbot.ai.category_candidates import warmup_category_selector
-from ydachnik_chatbot.ai.retrievers import init_bm25_retriever
 from ydachnik_chatbot.infrastructure.db import get_engine, init_vectorstore_table
 from ydachnik_chatbot.infrastructure.db.vectorstore import get_vectorstore, init_vector_store
 from ydachnik_chatbot.settings import settings
@@ -37,7 +36,6 @@ async def lifespan(app: FastAPI):
     vectorstore = await get_vectorstore()
     runtime.vectorstore = vectorstore
     app.state.vectorstore = vectorstore
-    await init_bm25_retriever()
     await warmup_category_selector()
 
     async with AsyncPostgresSaver.from_conn_string(settings.checkpointer_dsn) as checkpointer:

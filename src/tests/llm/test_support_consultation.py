@@ -22,7 +22,7 @@ async def test_graph():
             input="Hi, is the delivery free?",
             expected_tools=[
                 ToolCall(
-                    name="fetch_page_main_block",
+                    name="fetch_page",
                     input_parameters={"url": "https://www.ydachnik.by/customers/delivery/"},
                 ),
             ],
@@ -32,7 +32,7 @@ async def test_graph():
             input="What if i dont like the product? Can i return it?",
             expected_tools=[
                 ToolCall(
-                    name="fetch_page_main_block",
+                    name="fetch_page",
                     input_parameters={"url": "https://www.ydachnik.by/customers/warranty/"},
                 ),
             ],
@@ -42,7 +42,7 @@ async def test_graph():
             input="Do you have any discount programs?",
             expected_tools=[
                 ToolCall(
-                    name="fetch_page_main_block",
+                    name="fetch_page",
                     input_parameters={"url": "https://www.ydachnik.by/customers/discont/"},
                 ),
             ],
@@ -83,7 +83,7 @@ async def test_graph():
         metrics=[
             GEval(
                 name="Support consulation",
-                model="gpt-5.4-mini",
+                model="gpt-4o-mini",
                 threshold=0.6,
                 criteria="Determine whether the assistant correctly answers the user's question.",
                 evaluation_params=[

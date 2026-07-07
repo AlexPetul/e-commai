@@ -18,7 +18,9 @@ from ydachnik_chatbot.settings import AppSettings
 
 
 async def seed_product_categories(settings: AppSettings, items: list[ProductItem]) -> None:
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     logger = logging.getLogger(__name__)
+
     seed = build_category_attributes(items)
     async_engine = create_async_engine(settings.database_url)
     try:
@@ -34,6 +36,8 @@ async def seed_product_categories(settings: AppSettings, items: list[ProductItem
                 )
                 await conn.execute(stmt)
         logger.info("Seeded %d product_categories rows.", len(seed))
+    except Exception as ex:
+        logger.error(ex)
     finally:
         await async_engine.dispose()
 

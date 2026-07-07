@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import asyncio
 import logging
 import re
@@ -290,10 +288,10 @@ class CsvCategoryClassifier(BaseCategoryClassifier):
 class DbCategoryClassifier(BaseCategoryClassifier):
     async def load_products(self) -> Sequence[ProductItem]:
         from ydachnik_chatbot.infrastructure.db.product_category_repo import (
-            fetch_products_for_category_selection,
+            product_category_repo,
         )
 
-        return await fetch_products_for_category_selection()
+        return await product_category_repo.fetch_products_for_category_selection()
 
 
 @lru_cache(maxsize=4)
