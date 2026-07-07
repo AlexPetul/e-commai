@@ -12,6 +12,7 @@
 - `PostgreSQL`
 - `pgvector` / vector search via LangChain Postgres integration
 - `OpenAI API` for chat and embeddings
+- `LangSmith` for LLM tracing and observability
 - `BM25` lexical retrieval
 - `BeautifulSoup`, `lxml`, `Scrapy`, `httpx` for catalog and page processing
 - `pytest`, `ruff`, `ty` for testing and code quality
@@ -30,3 +31,4 @@
 - Default `pytest` runs exclude AI/evaluation tests because the repository is configured with `-m 'not ai'`
 - Unit and integration tests cover catalog parsing, category selection, and data-loading logic
 - AI-marked tests validate conversation routing and LLM-driven flows when the required configuration is available
+- LangSmith tracing is enabled via `LANGCHAIN_TRACING_V2`, `LANGCHAIN_API_KEY`, and `LANGCHAIN_PROJECT`

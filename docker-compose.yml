@@ -63,12 +63,6 @@ services:
     profiles:
       - loaddata
 
-  evals:
-    build: .
-    env_file:
-      - .env
-    command: ["pytest", "src/tests/deepevals", "--capture", "no"]
-
   ai-tests:
     build:
       context: .

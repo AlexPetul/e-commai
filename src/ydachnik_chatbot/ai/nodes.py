@@ -15,6 +15,7 @@ from ydachnik_chatbot.ai.prompts import (
     get_product_system_prompt,
     load_customer_support_context,
 )
+from ydachnik_chatbot.ai.prompts_store.langsmith_store import langsmith_prompt_store
 from ydachnik_chatbot.ai.state import AgentState
 from ydachnik_chatbot.ai.tools import (
     fetch_page_main_block,
@@ -82,8 +83,9 @@ async def product_consultant_node(state: AgentState) -> dict[str, list[Any]]:
     if attributes:
         context_lines.append(f"- product_attributes: {attributes}")
 
+    system_prompt = await langsmith_prompt_store.retrieve("product_consultant")
     system_messages = [
-        SystemMessage(content=get_product_system_prompt()),
+        SystemMessage(content=system_prompt),
         SystemMessage(content="Current state:\n" + "\n".join(context_lines)),
     ]
 
@@ -98,9 +100,10 @@ async def support_consultant_node(state: AgentState) -> dict[str, list[Any]]:
     This node is called via routing rules.
     """
     llm = support_consultant_llm.bind_tools(support_tools)
+    system_prompt = await langsmith_prompt_store.retrieve("support_consultant")
     response = await llm.ainvoke(
         [
-            SystemMessage(content=SUPPORT_SYSTEM_PROMPT),
+            SystemMessage(content=system_prompt),
             SystemMessage(content=load_customer_support_context()),
         ]
         + state["messages"]
