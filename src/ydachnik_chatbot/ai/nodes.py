@@ -41,7 +41,7 @@ async def product_consultant_node(state: AgentState) -> dict[str, list[Any]]:
     if attributes:
         context_lines.append(f"- product_attributes: {attributes}")
 
-    system_prompt = await LangsmithPromptStore.retrieve("product_consultant")
+    system_prompt = await LangsmithPromptStore.retrieve("product_consultant:staging")
     system_messages = [
         SystemMessage(content=system_prompt),
         SystemMessage(content="Current state:\n" + "\n".join(context_lines)),

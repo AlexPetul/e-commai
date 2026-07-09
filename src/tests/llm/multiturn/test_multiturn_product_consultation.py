@@ -1,16 +1,21 @@
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
 from deepeval.dataset import EvaluationDataset
 from deepeval.evaluate import evaluate
-from deepeval.metrics import TopicAdherenceMetric, TurnRelevancyMetric
+from deepeval.metrics import (
+    TopicAdherenceMetric,
+    TurnFaithfulnessMetric,
+    TurnRelevancyMetric,
+)
 from deepeval.simulator import ConversationSimulator
 from deepeval.test_case import Turn
 from langchain_core.messages import HumanMessage
-from concurrent.futures import ThreadPoolExecutor
 
 _executor = ThreadPoolExecutor(max_workers=1)
+
 
 def run_async(coro):
     future = _executor.submit(asyncio.run, coro)
@@ -18,7 +23,7 @@ def run_async(coro):
 
 
 @pytest.mark.ai
-def test_graph(compiled_graph):
+def test_product_consultation(compiled_graph):
     def model_callback(input: str, thread_id: str) -> Turn:
         async def inner():
             result = await compiled_graph.ainvoke(
@@ -59,5 +64,6 @@ def test_graph(compiled_graph):
                     "Choosing products based on budget, brand, and intended use",
                 ],
             ),
+            TurnFaithfulnessMetric(model="gpt-5.4-mini"),
         ],
     )

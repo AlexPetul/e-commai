@@ -6,13 +6,15 @@ from urllib.parse import urlparse
 import httpx
 from bs4 import BeautifulSoup
 from cachier import cachier
-from langchain_core.messages import HumanMessage, ToolMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 from langchain_core.tools import InjectedToolCallId, tool
 from langgraph.prebuilt import ToolRuntime
 from langgraph.types import Command
 
 from ydachnik_chatbot.ai.category_candidates import get_nearest_category_candidates
 from ydachnik_chatbot.ai.filters import score_document
+from ydachnik_chatbot.ai.llm import query_transformation_llm
+from ydachnik_chatbot.ai.prompts_store.langsmith_store import LangsmithPromptStore
 from ydachnik_chatbot.ai.retrievers import retrieve
 from ydachnik_chatbot.infrastructure.db.product_category_repo import product_category_repo
 
@@ -54,6 +56,7 @@ async def load_category_attributes(
 @tool
 async def save_product_attributes(
     attributes: dict[str, Any],
+    runtime: ToolRuntime,
     tool_call_id: Annotated[str, InjectedToolCallId],
 ):
     """Save the extracted attributes of the product in state.
@@ -61,6 +64,18 @@ async def save_product_attributes(
     Call this once you receive from the user any details about
     the product he is searching for.
     """
+    if not runtime.state.get("product_category"):
+        return Command(
+            update={
+                "messages": [
+                    ToolMessage(
+                        content="Product category must be set before saving attributes.",
+                        tool_call_id=tool_call_id,
+                    ),
+                ],
+            }
+        )
+
     return Command(
         update={
             "product_attributes": {
@@ -91,7 +106,7 @@ async def set_product_category(
 
     if category != current_category:
         update["product_attribute_schema"] = None
-        # update["product_attributes"] = None
+        update["product_attributes"] = None
 
     return Command(
         update={**update, "messages": [ToolMessage(content=content, tool_call_id=tool_call_id)]}
@@ -110,7 +125,12 @@ async def get_category_candidates_for_classification(runtime: ToolRuntime) -> li
         if isinstance(m, HumanMessage) and isinstance(m.content, str) and m.content.strip()
     ][-1]
 
-    return await get_nearest_category_candidates(message)
+    system_prompt = await LangsmithPromptStore.retrieve("rewrite_prompt")
+    rewritten: AIMessage = await query_transformation_llm.ainvoke(
+        [SystemMessage(system_prompt), HumanMessage(message)],
+    )
+
+    return await get_nearest_category_candidates(rewritten.content)
 
 
 @tool

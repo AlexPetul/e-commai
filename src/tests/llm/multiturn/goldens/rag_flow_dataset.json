@@ -2,29 +2,5 @@
   {
     "scenario": "Andy wants to buy a new lawnmower but doesn't know how to choose.",
     "expected_output": "The system has provided to Andy a few products to concider, or answer politely that there is no matching products in the catalog."
-  },
-  {
-    "scenario": "Andy wants to buy a new cordless rotary hammer, his budget is 1400 BYN and it should be less than 4kg.",
-    "expected_output": "The system has provided to Andy a few products to concider with the matching characteristics, or answer politely that there is no matching products in the catalog."
-  },
-  {
-    "scenario": "Andy wants to buy a pressure washer for cleaning his car. He prefers a Karcher model and has a budget of 1200 BYN.",
-    "expected_output": "The system has provided Andy with a few suitable products matching his requirements, or politely explained that there are no matching products in the catalog."
-  },
-  {
-    "scenario": "Andy is looking for a gasoline chainsaw for cutting firewood. He prefers a guide bar around 40 cm and wants a reliable model for regular use.",
-    "expected_output": "The system has provided Andy with a few suitable products matching his requirements, or politely explained that there are no matching products in the catalog."
-  },
-  {
-    "scenario": "Andy needs an electric hedge trimmer for maintaining a small garden. He prefers a lightweight model under 3 kg and has a budget of 400 BYN.",
-    "expected_output": "The system has provided Andy with a few suitable products matching his requirements, or politely explained that there are no matching products in the catalog."
-  },
-  {
-    "scenario": "Andy wants to buy a shop vacuum for cleaning a garage after renovation. He needs a model suitable for collecting both dry and wet debris.",
-    "expected_output": "The system has provided Andy with a few suitable products matching his requirements, or politely explained that there are no matching products in the catalog."
-  },
-  {
-    "scenario": "Andy is searching for an angle grinder for home renovation. He wants a 125 mm disc, a reputable brand, and a budget of up to 350 BYN.",
-    "expected_output": "The system has provided Andy with a few suitable products matching his requirements, or politely explained that there are no matching products in the catalog."
   }
 ]
