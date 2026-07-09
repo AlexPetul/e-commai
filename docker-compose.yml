@@ -47,6 +47,7 @@ services:
       - ./public:/code/public
       - ./.chainlit:/code/.chainlit
       - ./products.csv:/code/products.csv:ro
+      - hf-cache:/opt/huggingface
 
   loaddata:
     build:
@@ -84,3 +85,4 @@ services:
 
 volumes:
   dbdata:
+  hf-cache:

@@ -67,7 +67,7 @@ def build_product_rows(items: list[ProductItem]) -> list[dict]:
                 "title": item.title,
                 "description": item.description,
                 "tech_specs": item.tech_specs,
-                "price": item.price,
+                "price": float(item.price or 0),
                 "currency": item.currency,
                 "category_name": item.category,
                 "image": item.image or None,

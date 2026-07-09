@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import re
 import unicodedata
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
@@ -10,7 +9,6 @@ from pathlib import Path
 from typing import Protocol
 
 import numpy as np
-from rapidfuzz import fuzz
 
 from ydachnik_chatbot.catalog.csv_reader import read_products_csv
 from ydachnik_chatbot.schemas import ProductItem
@@ -44,13 +42,6 @@ def _normalize_text(value: str) -> str:
     return unicodedata.normalize("NFC", value).strip()
 
 
-def _build_query_text(query: str, current_category: str | None) -> str:
-    parts = [_normalize_text(query)]
-    if current_category:
-        parts.append(_normalize_text(current_category))
-    return " ".join(part for part in parts if part).strip()
-
-
 def _dedupe_preserve_order(items: list[str]) -> list[str]:
     seen: set[str] = set()
     result: list[str] = []
@@ -70,16 +61,7 @@ def _normalize_embedding(vector: np.ndarray) -> np.ndarray:
 
 
 def _category_text_variants(category: str) -> list[str]:
-    normalized = _normalize_text(category)
-    lower = normalized.lower()
-    compact = re.sub(r"\s+", " ", lower)
-    variants = [
-        normalized,
-        lower,
-        f"категория {compact}",
-        f"товар категории {compact}",
-    ]
-    return _dedupe_preserve_order([variant for variant in variants if variant])
+    return [category]
 
 
 def build_category_corpus(
@@ -87,18 +69,15 @@ def build_category_corpus(
     *,
     per_category: int = 10,
 ) -> dict[str, tuple[str, ...]]:
-    grouped: dict[str, list[str]] = {}
+    grouped: dict[str, None] = {}
     for item in items:
         category = _normalize_text(item.category)
-        title = _normalize_text(item.title)
-        if not category or not title:
+        if not category:
             continue
 
-        grouped.setdefault(category, [])
-        if len(grouped[category]) < per_category:
-            grouped[category].append(title)
+        grouped.setdefault(category, None)
 
-    return {category: tuple(titles) for category, titles in grouped.items()}
+    return {category: (category,) for category in grouped}
 
 
 def _get_embedding_model():
@@ -133,13 +112,8 @@ def _build_category_stats(
         return {}
 
     stats: dict[str, CategoryStats] = {}
-    for category, titles in corpus.items():
-        texts = _dedupe_preserve_order(
-            [
-                *_category_text_variants(category),
-                *(f"{category}: {title}" for title in titles[:10]),
-            ]
-        )
+    for category in corpus:
+        texts = _dedupe_preserve_order(_category_text_variants(category))
         embeddings = np.asarray(embedding_model.encode(texts, normalize_embeddings=True))
         if embeddings.ndim == 1:
             embeddings = embeddings.reshape(1, -1)
@@ -184,22 +158,6 @@ def _score_with_embeddings(
     return [category for category, _ in scored]
 
 
-def _score_with_fuzz(query: str, categories: Sequence[str]) -> list[str]:
-    scored = [
-        (
-            category,
-            max(
-                fuzz.token_set_ratio(query, category),
-                fuzz.partial_ratio(query, category),
-                fuzz.ratio(query, category),
-            ),
-        )
-        for category in categories
-    ]
-    scored.sort(key=lambda item: item[1], reverse=True)
-    return [category for category, _ in scored]
-
-
 def _load_products_from_csv(csv_path: str | Path) -> list[ProductItem]:
     path = Path(csv_path)
     content = path.read_text(encoding="utf-8-sig")
@@ -240,27 +198,18 @@ class BaseCategoryClassifier(ABC):
     async def get_nearest_category_candidates(
         self,
         query: str,
-        *,
-        current_category: str | None = None,
         limit: int = 5,
     ) -> list[str]:
         index = await self._ensure_index()
         if not index.stats:
             return []
 
-        candidate_query = _build_query_text(query, current_category)
-
         def _resolve() -> list[str]:
             selected = _score_with_embeddings(
-                candidate_query,
+                query,
                 index.stats,
                 self._embedding_model,
             )
-            if not selected:
-                selected = _score_with_fuzz(candidate_query, list(index.stats.keys()))
-
-            if current_category:
-                selected = [current_category, *selected]
 
             return _dedupe_preserve_order(selected)[:limit]
 
@@ -302,7 +251,6 @@ def _get_default_csv_classifier(csv_path: str, per_category: int) -> CsvCategory
 async def get_nearest_category_candidates(
     query: str,
     *,
-    current_category: str | None = None,
     limit: int = 5,
     csv_path: str | Path | None = None,
     classifier: BaseCategoryClassifier | None = None,
@@ -316,13 +264,12 @@ async def get_nearest_category_candidates(
 
     return await classifier.get_nearest_category_candidates(
         query,
-        current_category=current_category,
         limit=limit,
     )
 
 
-async def warmup_category_selector(*, csv_path: str | Path | None = None) -> None:
-    path = Path(csv_path or settings.products_csv_path)
+async def warmup_category_selector() -> None:
+    path = Path(settings.products_csv_path)
     if not path.exists():
         logger.warning("No products CSV found during category selector warmup: %s", path)
         return

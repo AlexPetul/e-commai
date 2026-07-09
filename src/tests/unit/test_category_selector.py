@@ -57,3 +57,27 @@ async def test_csv_category_classifier(
     candidates = await classifier.get_nearest_category_candidates(query)
 
     assert expected_category in candidates
+
+
+@pytest.mark.asyncio
+async def test_csv_category_classifier_does_not_use_titles_for_embeddings(
+    tmp_path: Path,
+):
+    csv_path = tmp_path / "products.csv"
+    csv_path.write_text(
+        "url;title;category\n"
+        "https://example.com/1;Газонокосилка Alpha;Газонокосилки\n"
+        "https://example.com/2;Триммер Beta;Триммеры\n",
+        encoding="utf-8",
+    )
+    fake_model = FakeEmbeddingModel()
+    classifier = CsvCategoryClassifier(csv_path=csv_path, embedding_model=fake_model)
+
+    await classifier.build_index()
+
+    encoded_texts = [text for call in fake_model.calls for text in call]
+
+    assert encoded_texts
+    assert all("Газонокосилка Alpha" not in text for text in encoded_texts)
+    assert all("Триммер Beta" not in text for text in encoded_texts)
+    assert any("Газонокосилки" in text for text in encoded_texts)

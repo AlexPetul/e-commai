@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, String, Text
+from sqlalchemy import Float, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -20,7 +20,7 @@ class Product(Base):
     title: Mapped[str] = mapped_column(Text)
     description: Mapped[str] = mapped_column(Text, default="", nullable=False)
     tech_specs: Mapped[str] = mapped_column(Text, default="", nullable=False)
-    price: Mapped[str] = mapped_column(String(100), default="", nullable=False)
+    price: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
     currency: Mapped[str] = mapped_column(String(20), default="", nullable=False)
     category_name: Mapped[str] = mapped_column(
         ForeignKey("product_categories.name"),

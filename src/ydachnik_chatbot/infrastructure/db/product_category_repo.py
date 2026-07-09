@@ -85,7 +85,9 @@ class ProductCategoryRepository:
                 select(
                     func.min(Product.price),
                     func.max(Product.price),
-                ).where(Product.category_name == category)
+                )
+                .where(Product.category_name == category)
+                .group_by(Product.category)
             )
 
             min_price, max_price = result.one()

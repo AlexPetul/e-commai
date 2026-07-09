@@ -75,7 +75,7 @@ def test_build_product_rows():
             "title": "Product title",
             "description": "Описание",
             "tech_specs": "Характеристики",
-            "price": "123.45",
+            "price": 123.45,
             "currency": "BYN",
             "category_name": "Категория",
             "image": "https://example.com/image.jpg",

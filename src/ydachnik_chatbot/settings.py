@@ -23,9 +23,7 @@ class AppSettings(BaseSettings):
     embedding_model: str = Field(default="text-embedding-3-small")
     embedding_dimensions: int = Field(default=1536)
     vector_table_name: str = Field(default="products_vector")
-    category_selection_model: str | None = Field(
-        default="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-    )
+    category_selection_model: str | None = Field(default="intfloat/multilingual-e5-base")
 
     @computed_field
     @property

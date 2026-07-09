@@ -21,6 +21,13 @@ COPY src /code/src
 COPY .chainlit /code/.chainlit
 COPY public /code/public
 
+ENV HF_HOME=/opt/huggingface
+
+RUN python -c "\
+from sentence_transformers import SentenceTransformer; \
+SentenceTransformer('intfloat/multilingual-e5-base') \
+"
+
 CMD ["fastapi", "run", "--app", "app", "src/ydachnik_chatbot/app.py"]
 
 

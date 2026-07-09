@@ -119,24 +119,25 @@ async def get_category_candidates_for_classification(runtime: ToolRuntime) -> li
 
     Call this only when the product category is unknown or unclear.
     """
-    message = [
+    messages = [
         m.content.strip()
         for m in runtime.state["messages"]
         if isinstance(m, HumanMessage) and isinstance(m.content, str) and m.content.strip()
-    ][-1]
+    ][-5:]
+    message = " ".join(messages)
 
     system_prompt = await LangsmithPromptStore.retrieve("rewrite_prompt")
     rewritten: AIMessage = await query_transformation_llm.ainvoke(
         [SystemMessage(system_prompt), HumanMessage(message)],
     )
 
-    return await get_nearest_category_candidates(rewritten.content)
+    return await get_nearest_category_candidates(rewritten.content, limit=10)
 
 
 @tool
 async def get_price_range(category: str, tool_call_id: Annotated[str, InjectedToolCallId]):
     """Get price range for product category and product preferences."""
-    min_p, max_p = await product_category_repo.get_price_range(category=category)
+    min_p, max_p = await product_category_repo.get_price_range(category)
 
     return Command(
         update={
