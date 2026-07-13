@@ -9,7 +9,7 @@ class ProductItem(BaseModel):
     image: str | None = ""
     description: str = ""
     tech_specs: str = ""
-    price: str = ""
+    price: float = 0.0
     currency: str = ""
     category: str = ""
     attributes: str = ""

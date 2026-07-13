@@ -20,5 +20,5 @@ intent_router_llm = ChatOpenAI(
 
 query_transformation_llm = ChatOpenAI(
     model=settings.openai_model,
-    streaming=False,
+    disable_streaming=True,
 )

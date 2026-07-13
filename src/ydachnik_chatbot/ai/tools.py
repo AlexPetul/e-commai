@@ -7,6 +7,7 @@ import httpx
 from bs4 import BeautifulSoup
 from cachier import cachier
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
+from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import InjectedToolCallId, tool
 from langgraph.prebuilt import ToolRuntime
 from langgraph.types import Command
@@ -128,7 +129,13 @@ async def get_category_candidates_for_classification(runtime: ToolRuntime) -> li
 
     system_prompt = await LangsmithPromptStore.retrieve("rewrite_prompt")
     rewritten: AIMessage = await query_transformation_llm.ainvoke(
-        [SystemMessage(system_prompt), HumanMessage(message)],
+        [
+            SystemMessage(system_prompt),
+            HumanMessage(message),
+        ],
+        config=RunnableConfig(
+            metadata={"disable_streaming": True},
+        ),
     )
 
     return await get_nearest_category_candidates(rewritten.content, limit=10)
